@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(cuid())
+  walletAddress    String         @unique
+  createdAt        DateTime       @default(now())
+  lastLoginAt      DateTime       @default(now())
+  totalSpentUsdc   Decimal        @default(0) @db.Decimal(20, 6)
+  freeMessagesUsed Int            @default(0)
+  conversations    Conversation[]
+  agentTasks       AgentTask[]
+  payments         Payment[]
+
+  @@index([walletAddress])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // "user" | "assistant" | "tool"
+  content        String       @db.Text
+  toolCalls      Json?        // Array of tool calls made
+  toolResults    Json?        // Results from tool execution
+  paymentId      String?      // x402 payment associated with this message
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model AgentTask {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolName       String
+  parameters     Json
+  result         Json?
+  status         String    @default("pending") // pending | executing | completed | failed
+  transactionSig String?   // Solana tx signature if applicable
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Payment {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountUsdc     Decimal   @db.Decimal(20, 6)
+  transactionSig String    @unique
+  endpoint       String    // Which API endpoint was paid for
+  status         String    @default("pending") // pending | confirmed | failed
+  createdAt      DateTime  @default(now())
+  confirmedAt    DateTime?
+
+  @@index([userId])
+  @@index([transactionSig])
+}
