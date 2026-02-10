@@ -1,6 +1,6 @@
-# SolarkBot — Crypto-Native AI Assistant on Solana
+# SolarkBot — Crypto-Native AI Assistant on Solana ( https://solarkbot.xyz )
 
-A StarkBot-equivalent built for Solana: AI assistant with wallet authentication, x402 micropayments, and autonomous agent capabilities. Open source, self-hostable, built for the decentralized web.
+ Built for Solana: AI assistant with wallet authentication, x402 micropayments, and autonomous agent capabilities. Open source, self-hostable, built for the decentralized web.
 
 ## Features
 
@@ -70,14 +70,14 @@ cp .env.example .env
 # Start all services
 docker-compose up -d
 
-# The app will be available at http://localhost:3000
+# The app will be available at http://localhost:3000 (https://solarkbot.xyz )
 ```
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXTAUTH_URL` | Yes | Your app URL (e.g., `http://localhost:3000`) |
+| `NEXTAUTH_URL` | Yes | Your app URL (e.g., `https://solarkbot.xyz`) |
 | `NEXTAUTH_SECRET` | Yes | Random secret for JWT signing |
 | `AI_PROVIDER` | Yes | `openai` or `anthropic` |
 | `OPENAI_API_KEY` | If using OpenAI | OpenAI API key |
@@ -177,6 +177,4 @@ npm run db:seed
 
 MIT
 
-## Credits
 
-Inspired by [StarkBot](https://starkbot.ai) by @ethereumdegen, re-architected for Solana.
