@@ -1,4 +1,5 @@
-# SolarkBot — Crypto-Native AI Assistant on Solana ( https://solarkbot.xyz )
+# SolarkBot — Crypto-Native AI Assistant on Solana  
+( https://solarkbot.xyz )
 
  Built for Solana: AI assistant with wallet authentication, x402 micropayments, and autonomous agent capabilities. Open source, self-hostable, built for the decentralized web.
 
