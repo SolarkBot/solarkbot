@@ -6,6 +6,7 @@ import { prisma } from "../db/prisma";
 import {
   getAuthBaseUrl,
   getAuthSecret,
+  getTrustedAuthOrigins,
   isBetterAuthInfraEnabled,
 } from "./config";
 import { solanaAuth } from "./solana-plugin";
@@ -35,5 +36,6 @@ export const auth = betterAuth({
   }),
   baseURL: getAuthBaseUrl(),
   secret: getAuthSecret(),
+  trustedOrigins: (request) => getTrustedAuthOrigins(request),
   plugins,
 });

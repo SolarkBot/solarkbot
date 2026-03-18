@@ -12,7 +12,7 @@ import {
   extractWalletAddress,
   verifySIWSSignature,
 } from "../solana/wallet-auth";
-import { getExpectedAuthHost } from "./config";
+import { getRequestAwareExpectedAuthHost } from "./config";
 import {
   getNonceCookieOptions,
   readNonceCookieValue,
@@ -269,10 +269,11 @@ export function solanaAuth(): BetterAuthPlugin {
           }
 
           const messageDomain = extractDomain(message);
-          if (messageDomain !== getExpectedAuthHost()) {
+          const expectedHost = getRequestAwareExpectedAuthHost(ctx.headers);
+          if (messageDomain !== expectedHost) {
             throw APIError.from("UNAUTHORIZED", {
               code: "SOLANA_DOMAIN_MISMATCH",
-              message: "Sign-in domain mismatch.",
+              message: `Sign-in domain mismatch. Expected ${expectedHost}.`,
             });
           }
 

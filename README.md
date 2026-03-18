@@ -32,6 +32,16 @@ npm run db:push
 npm run dev
 ```
 
+Local auth now accepts the active loopback host in development, so SIWS works on `localhost` and `127.0.0.1` without editing server code. For the cleanest cookie and link behavior, keep `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`, and `NEXTAUTH_URL` aligned with the local URL you actually open in the browser.
+
+If your local dev server starts returning stale `_next` assets or chunk 404s, run this reset path:
+
+```bash
+npm run dev:reset
+```
+
+That command stops repo-local `next dev` processes, clears `.next`, and starts a fresh dev server. You can pass extra args through to Next, for example `npm run dev:reset -- --hostname 127.0.0.1 --port 3000`.
+
 Production site: [https://solarkbot.xyz](https://solarkbot.xyz).
 
 ## Required Environment Variables
@@ -72,6 +82,18 @@ Production site: [https://solarkbot.xyz](https://solarkbot.xyz).
 
 `NEXTAUTH_URL` and `NEXTAUTH_SECRET` are still accepted as fallbacks, but Better Auth env names are now the primary config.
 
+## Production Rollout
+
+Use [.env.vercel](./.env.vercel) as the reference for Vercel. Before redeploying:
+
+1. Set `BETTER_AUTH_URL` and `NEXTAUTH_URL` to `https://solarkbot.xyz`.
+2. Replace `DATABASE_URL` with a hosted Postgres connection string.
+3. Replace `REDIS_URL` with a hosted Redis connection string.
+4. Set `MERCHANT_WALLET_ADDRESS` so payment-gated flows can settle correctly.
+5. If the hosted database is new, run `npm run db:push` against it before redeploying.
+
+Production should never point `DATABASE_URL` or `REDIS_URL` at `localhost`, because Vercel cannot reach local services.
+
 ## Auth Flow
 
 1. The client requests a nonce from `/api/auth/nonce`.
@@ -109,3 +131,5 @@ This repo conditionally mounts Better Auth Infra only when `BETTER_AUTH_API_KEY`
 ```bash
 npm run build
 ```
+
+On local Windows machines, `npm run build` now detects Prisma engine file locks caused by active Node or Next.js processes. When an existing generated Prisma client is already available, the build reuses it and prints an actionable warning instead of hard-failing. If you want a fully clean local build, stop dev servers first or run `npm run dev:reset`.

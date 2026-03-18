@@ -131,15 +131,20 @@ async function executeToolCall(
   walletAddress: string,
   includeContractAddresses: boolean
 ): Promise<ToolResult> {
-  // Log task start in DB
-  const agentTask = await prisma.agentTask.create({
-    data: {
-      userId,
-      toolName: toolCall.name,
-      parameters: toolCall.arguments as unknown as import("@prisma/client").Prisma.InputJsonValue,
-      status: "executing",
-    },
-  });
+  let agentTask: { id: string } | null = null;
+
+  try {
+    agentTask = await prisma.agentTask.create({
+      data: {
+        userId,
+        toolName: toolCall.name,
+        parameters: toolCall.arguments as unknown as import("@prisma/client").Prisma.InputJsonValue,
+        status: "executing",
+      },
+    });
+  } catch (error) {
+    console.error("Agent tool logging unavailable, continuing without task persistence:", error);
+  }
 
   try {
     const result = await executeTool(toolCall.name, toolCall.arguments, {
@@ -147,15 +152,20 @@ async function executeToolCall(
       includeContractAddresses,
     });
 
-    // Update task as completed
-    await prisma.agentTask.update({
-      where: { id: agentTask.id },
-      data: {
-        status: "completed",
-        result: result as unknown as import("@prisma/client").Prisma.InputJsonValue,
-        completedAt: new Date(),
-      },
-    });
+    if (agentTask) {
+      try {
+        await prisma.agentTask.update({
+          where: { id: agentTask.id },
+          data: {
+            status: "completed",
+            result: result as unknown as import("@prisma/client").Prisma.InputJsonValue,
+            completedAt: new Date(),
+          },
+        });
+      } catch (error) {
+        console.error("Failed to persist completed agent tool result:", error);
+      }
+    }
 
     return {
       toolCallId: toolCall.id,
@@ -168,15 +178,20 @@ async function executeToolCall(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
-    // Update task as failed
-    await prisma.agentTask.update({
-      where: { id: agentTask.id },
-      data: {
-        status: "failed",
-        result: { error: errorMessage },
-        completedAt: new Date(),
-      },
-    });
+    if (agentTask) {
+      try {
+        await prisma.agentTask.update({
+          where: { id: agentTask.id },
+          data: {
+            status: "failed",
+            result: { error: errorMessage },
+            completedAt: new Date(),
+          },
+        });
+      } catch (updateError) {
+        console.error("Failed to persist failed agent tool result:", updateError);
+      }
+    }
 
     return {
       toolCallId: toolCall.id,
