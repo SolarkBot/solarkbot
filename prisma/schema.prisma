@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(cuid())
+  walletAddress    String         @unique
+  name             String         @default("")
+  email            String         @unique @default(cuid())
+  emailVerified    Boolean        @default(false)
+  image            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  lastLoginAt      DateTime       @default(now())
+  totalSpentUsdc   Decimal        @default(0) @db.Decimal(20, 6)
+  freeMessagesUsed Int            @default(0)
+  sessions         Session[]
+  accounts         Account[]
+  conversations    Conversation[]
+  agentTasks       AgentTask[]
+  payments         Payment[]
+
+  @@index([walletAddress])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // "user" | "assistant" | "tool"
+  content        String       @db.Text
+  toolCalls      Json?        // Array of tool calls made
+  toolResults    Json?        // Results from tool execution
+  paymentId      String?      // x402 payment associated with this message
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model AgentTask {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolName       String
+  parameters     Json
+  result         Json?
+  status         String    @default("pending") // pending | executing | completed | failed
+  transactionSig String?   // Solana tx signature if applicable
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Payment {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountUsdc     Decimal   @db.Decimal(20, 6)
+  transactionSig String    @unique
+  endpoint       String    // Which API endpoint was paid for
+  status         String    @default("pending") // pending | confirmed | failed
+  createdAt      DateTime  @default(now())
+  confirmedAt    DateTime?
+
+  @@index([userId])
+  @@index([transactionSig])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@index([expiresAt])
+}
