@@ -21,6 +21,10 @@ import {
   Search,
   Send,
   ChevronRight,
+  Bell,
+  BarChart3,
+  Brain,
+  FileText,
 } from "lucide-react";
 
 const features = [
@@ -96,6 +100,120 @@ const lucidSteps = [
   "Connect xgate MCP with SIWE and a session token",
   "Install the lucid-agent-creator skill for Claude or Cursor",
   "Prompt your AI to write the handler and call create_lucid_agent",
+];
+
+const roadmapSignals = [
+  "Assistant to operator",
+  "Simulate before signing",
+  "Automate strategy",
+  "Protocol-native actions",
+];
+
+const upcomingFeatureGroups = [
+  {
+    icon: BarChart3,
+    title: "Portfolio Intelligence",
+    description:
+      "Surface exposure, PnL, and concentration risk before the user makes the next move.",
+    points: [
+      "SOL exposure checks",
+      "PnL across tokens and NFTs",
+      "Volatility and concentration scoring",
+    ],
+    example: '"Am I overexposed to SOL?"',
+    gradient: "from-sky-500 to-cyan-400",
+  },
+  {
+    icon: FileText,
+    title: "Transaction Explanation",
+    description:
+      "Translate every signature request into human language before and after execution.",
+    points: [
+      "Swap route previews",
+      "Fee and slippage breakdowns",
+      "Post-trade settlement summaries",
+    ],
+    example: '"This swaps 1 SOL to ~150 USDC via Jupiter."',
+    gradient: "from-amber-500 to-orange-400",
+  },
+  {
+    icon: Brain,
+    title: "Memory Layer",
+    description:
+      "Remember the tokens, addresses, and risk settings that make repeat flows feel personal.",
+    points: [
+      "Favorite tokens",
+      "Frequent recipients",
+      "Saved slippage and risk preferences",
+    ],
+    example: '"Use low slippage like last time."',
+    gradient: "from-violet-500 to-fuchsia-400",
+  },
+  {
+    icon: Bell,
+    title: "Alerts and Automation",
+    description:
+      "Watch markets, trigger rules, and move from reactive chat to always-on wallet operations.",
+    points: [
+      "Price alerts",
+      "Recurring buys",
+      "Auto-exit conditions",
+    ],
+    example: '"Alert me if SOL drops below $100."',
+    gradient: "from-solana-green to-emerald-400",
+  },
+  {
+    icon: Zap,
+    title: "Strategy Execution",
+    description:
+      "Handle complex multi-step tasks with one instruction instead of a trail of manual clicks.",
+    points: [
+      "Best-pool staking",
+      "Claim-and-restake flows",
+      "Swap-then-send actions",
+    ],
+    example: '"Swap SOL to USDC and send it to Alice."',
+    gradient: "from-solana-purple to-indigo-500",
+  },
+  {
+    icon: Coins,
+    title: "DeFi Power Features",
+    description:
+      "Go deeper for serious users with yield discovery, copy trading, and portfolio analytics.",
+    points: [
+      "Yield aggregation",
+      "Copy smart-money wallets",
+      "Win rate, ROI, and spend analytics",
+    ],
+    example: '"Stake my SOL in the best pool."',
+    gradient: "from-rose-500 to-pink-400",
+  },
+  {
+    icon: Globe,
+    title: "Ecosystem Integrations",
+    description:
+      "Turn SolarkBot into the front door for swaps, staking, NFTs, perps, and future cross-chain flows.",
+    points: [
+      "Jupiter, Marinade, Jito",
+      "Tensor and Magic Eden",
+      "Bridge and multi-wallet support",
+    ],
+    example: '"Show my NFTs and their floor prices."',
+    gradient: "from-teal-500 to-green-400",
+  },
+  {
+    icon: Shield,
+    title: "Security, Platform, and UX",
+    description:
+      "Ship the trust layer and power-user surface that makes the product sticky and safe to use daily.",
+    points: [
+      "Simulation mode and scam detection",
+      "Plugins, SDK, and referral loops",
+      "Voice mode, shortcuts, and chat templates",
+    ],
+    example: '"Hey Solark, swap 1 SOL."',
+    gradient: "from-slate-300 to-zinc-100",
+  },
 ];
 
 function TypewriterText({ texts }: { texts: string[] }) {
@@ -397,6 +515,91 @@ export default function LandingPage() {
                 <h3 className="mb-2 text-lg font-semibold">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.description}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Upcoming Features */}
+      <section className="relative overflow-hidden border-y border-border/40 bg-card/20 py-24">
+        <div className="absolute inset-0">
+          <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-solana-purple/12 blur-[120px]" />
+          <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-solana-green/10 blur-[140px]" />
+          <div className="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-amber-200/8 blur-[120px]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-4">
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-solana-green/20 bg-solana-green/10 px-4 py-1.5 text-sm text-solana-green">
+              <Zap className="h-3.5 w-3.5" />
+              Upcoming features
+            </div>
+            <h2 className="mt-6 text-3xl font-bold tracking-tight sm:text-5xl">
+              The next version of{" "}
+              <span className="bg-gradient-to-r from-solana-purple via-white to-solana-green bg-clip-text text-transparent">
+                SolarkBot
+              </span>{" "}
+              is built to operate, not just answer
+            </h2>
+            <p className="mx-auto mt-5 max-w-3xl text-base text-muted-foreground sm:text-lg">
+              We are expanding SolarkBot into a portfolio intelligence layer, autonomous operator,
+              DeFi execution engine, and trust-first wallet interface for serious Solana users.
+            </p>
+          </div>
+
+          <div className="mb-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {roadmapSignals.map((signal) => (
+              <div
+                key={signal}
+                className="rounded-2xl border border-border/50 bg-background/35 px-4 py-4 text-center text-sm font-medium text-foreground/90 backdrop-blur-sm"
+              >
+                {signal}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {upcomingFeatureGroups.map((item) => (
+              <Card
+                key={item.title}
+                className="group relative h-full overflow-hidden border-border/50 bg-card/55 backdrop-blur-sm transition-all duration-300 hover:border-solana-purple/30 hover:shadow-[0_0_30px_rgba(153,69,255,0.08)]"
+              >
+                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.gradient}`} />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <CardContent className="relative flex h-full flex-col p-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} shadow-lg`}>
+                      <item.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold tracking-tight">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3">
+                    {item.points.map((point) => (
+                      <div
+                        key={point}
+                        className="flex items-center gap-3 rounded-xl border border-border/50 bg-background/30 px-4 py-3 text-sm text-foreground/90"
+                      >
+                        <span className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${item.gradient}`} />
+                        <span>{point}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+                    <div className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+                      Example
+                    </div>
+                    <div className="mt-2 font-mono text-sm text-solana-green">
+                      {item.example}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
