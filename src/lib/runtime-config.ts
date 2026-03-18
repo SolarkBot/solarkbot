@@ -123,9 +123,9 @@ export function getRuntimeConfigIssues() {
     addIssue(
       issues,
       "missing-redis-url",
-      "error",
+      "warning",
       "redis",
-      "REDIS_URL is missing. Hosted Redis is required for rate limits and wallet auth nonce storage."
+      "REDIS_URL is missing. The app will fall back to Postgres for nonce and usage tracking, but hosted Redis is still recommended."
     );
   } else {
     const redisHost = getUrlHost(redisUrl);
@@ -133,9 +133,9 @@ export function getRuntimeConfigIssues() {
       addIssue(
         issues,
         "local-redis-url",
-        "error",
+        "warning",
         "redis",
-        "REDIS_URL points to localhost. Vercel cannot reach your local Redis."
+        "REDIS_URL points to localhost. Vercel cannot reach your local Redis, so the app will fall back to Postgres."
       );
     }
   }
