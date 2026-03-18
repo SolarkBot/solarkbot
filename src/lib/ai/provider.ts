@@ -29,6 +29,14 @@ export interface ChatCompletionResult {
 type AIProvider = "openai" | "anthropic" | "groq";
 type OpenAICompatibleProvider = "openai" | "groq";
 
+function getRequiredEnv(name: string, message: string) {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(message);
+  }
+  return value;
+}
+
 function getProvider(): AIProvider {
   const provider = (process.env.AI_PROVIDER || "openai") as AIProvider;
   if (provider !== "openai" && provider !== "anthropic" && provider !== "groq") {
@@ -52,7 +60,12 @@ let groqClient: OpenAI | null = null;
 
 function getOpenAIClient(): OpenAI {
   if (!openaiClient) {
-    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    openaiClient = new OpenAI({
+      apiKey: getRequiredEnv(
+        "OPENAI_API_KEY",
+        "OPENAI_API_KEY is missing. Add it to your environment before using the OpenAI provider."
+      ),
+    });
   }
   return openaiClient;
 }
@@ -60,7 +73,10 @@ function getOpenAIClient(): OpenAI {
 function getGroqClient(): OpenAI {
   if (!groqClient) {
     groqClient = new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
+      apiKey: getRequiredEnv(
+        "GROQ_API_KEY",
+        "GROQ_API_KEY is missing. Add it to your environment before using the Groq provider."
+      ),
       baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
     });
   }
@@ -69,7 +85,12 @@ function getGroqClient(): OpenAI {
 
 function getAnthropicClient(): Anthropic {
   if (!anthropicClient) {
-    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    anthropicClient = new Anthropic({
+      apiKey: getRequiredEnv(
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_API_KEY is missing. Add it to your environment before using the Anthropic provider."
+      ),
+    });
   }
   return anthropicClient;
 }

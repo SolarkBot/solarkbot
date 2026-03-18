@@ -7,6 +7,13 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { createSIWSMessage } from "@/lib/solana/wallet-auth";
 import bs58 from "bs58";
 
+interface RuntimeConfigIssue {
+  id: string;
+  severity: "error" | "warning";
+  scope: string;
+  message: string;
+}
+
 export default function SignInButton() {
   const router = useRouter();
   const { publicKey, signMessage, connected } = useWallet();
@@ -28,6 +35,19 @@ export default function SignInButton() {
 
     try {
       const walletAddress = publicKey.toBase58();
+      const configRes = await fetch("/api/health/config", {
+        cache: "no-store",
+      });
+      const configPayload = await configRes.json().catch(() => null);
+      const blockingIssues = (configPayload?.issues || []).filter(
+        (issue: RuntimeConfigIssue) => issue?.severity === "error"
+      );
+
+      if (Array.isArray(blockingIssues) && blockingIssues.length > 0) {
+        throw new Error(
+          blockingIssues.map((issue: RuntimeConfigIssue) => `- ${issue.message}`).join("\n")
+        );
+      }
 
       // 1. Fetch nonce from the server
       const nonceRes = await fetch(

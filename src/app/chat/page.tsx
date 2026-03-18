@@ -28,6 +28,13 @@ interface Conversation {
   updatedAt: string;
 }
 
+interface RuntimeConfigIssue {
+  id: string;
+  severity: "error" | "warning";
+  scope: string;
+  message: string;
+}
+
 export default function ChatPage() {
   const { data: authSession, isPending } = authClient.useSession();
   const router = useRouter();
@@ -39,6 +46,7 @@ export default function ChatPage() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [network, setNetwork] = useState<"devnet" | "mainnet-beta">("devnet");
+  const [configIssues, setConfigIssues] = useState<RuntimeConfigIssue[]>([]);
   const isAuthenticated = Boolean(authSession?.session && authSession?.user);
 
   // No redirect — show sign-in UI instead
@@ -95,6 +103,39 @@ export default function ChatPage() {
     refreshConversations();
   }, [refreshConversations]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      setConfigIssues([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadConfigIssues() {
+      try {
+        const response = await fetch("/api/health/config", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        if (!cancelled) {
+          setConfigIssues(Array.isArray(payload?.issues) ? payload.issues : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setConfigIssues([]);
+        }
+      }
+    }
+
+    loadConfigIssues();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
   function handleNewConversation() {
     setActiveConversationId(null);
     setSidebarOpen(false);
@@ -141,6 +182,26 @@ export default function ChatPage() {
         >
           AI agent or operator? Read the platform guide.
         </Link>
+        {configIssues.length > 0 && (
+          <div className="w-full max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left">
+            <p className="text-sm font-semibold text-amber-200">
+              Production setup needs attention
+            </p>
+            <div className="mt-2 space-y-2">
+              {configIssues.map((issue) => (
+                <p
+                  key={issue.id}
+                  className={`text-sm ${
+                    issue.severity === "error" ? "text-amber-50" : "text-amber-100/80"
+                  }`}
+                >
+                  {issue.severity === "error" ? "Error: " : "Warning: "}
+                  {issue.message}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex flex-col items-center gap-3">
           {!publicKey ? (
             <WalletButton />

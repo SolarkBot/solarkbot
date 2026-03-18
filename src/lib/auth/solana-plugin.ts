@@ -51,12 +51,14 @@ function getDatabaseHost() {
 
 function getPersistenceFailureMessage(error: unknown) {
   const databaseHost = getDatabaseHost();
+  const isProductionDeployment =
+    process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   const isLocalDatabase =
     databaseHost === "localhost" ||
     databaseHost === "127.0.0.1" ||
     databaseHost === "::1";
 
-  if (isLocalDatabase) {
+  if (isProductionDeployment && isLocalDatabase) {
     return "Production database is set to localhost. Update Vercel DATABASE_URL to a hosted Postgres URL.";
   }
 
