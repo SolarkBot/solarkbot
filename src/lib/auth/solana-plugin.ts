@@ -36,6 +36,48 @@ function isPrismaUniqueError(error: unknown) {
   );
 }
 
+function getDatabaseHost() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(databaseUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function getPersistenceFailureMessage(error: unknown) {
+  const databaseHost = getDatabaseHost();
+  const isLocalDatabase =
+    databaseHost === "localhost" ||
+    databaseHost === "127.0.0.1" ||
+    databaseHost === "::1";
+
+  if (isLocalDatabase) {
+    return "Production database is set to localhost. Update Vercel DATABASE_URL to a hosted Postgres URL.";
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientInitializationError ||
+    (error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P1001")
+  ) {
+    return "Database is unreachable. Check your Vercel DATABASE_URL and REDIS_URL settings.";
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    (error.code === "P2021" || error.code === "P2022")
+  ) {
+    return "Auth tables are missing in production. Sync Prisma to your hosted database, then redeploy.";
+  }
+
+  return "Authentication storage is not ready yet. Please try again in a moment.";
+}
+
 async function findOrCreateWalletUser(walletAddress: string) {
   const now = new Date();
   const email = getWalletEmail(walletAddress);
@@ -271,7 +313,7 @@ export function solanaAuth(): BetterAuthPlugin {
             console.error("Solana sign-in persistence failed:", error);
             throw APIError.from("INTERNAL_SERVER_ERROR", {
               code: "SOLANA_AUTH_PERSISTENCE_FAILED",
-              message: "Authentication storage is not ready yet. Please try again in a moment.",
+              message: getPersistenceFailureMessage(error),
             });
           }
 
