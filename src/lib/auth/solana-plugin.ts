@@ -11,6 +11,11 @@ import {
   verifySIWSSignature,
 } from "../solana/wallet-auth";
 import { getExpectedAuthHost } from "./config";
+import {
+  getNonceCookieOptions,
+  readNonceCookieValue,
+  SIWS_NONCE_COOKIE_NAME,
+} from "./nonce";
 
 const solanaSignInBodySchema = z.object({
   message: z.string().min(1),
@@ -59,13 +64,36 @@ export function solanaAuth(): BetterAuthPlugin {
             });
           }
 
-          const storedNonce = await consumeNonce(walletAddress);
-          if (!storedNonce || storedNonce !== messageNonce) {
+          let storedNonce: string | null = null;
+          try {
+            storedNonce = await consumeNonce(walletAddress);
+          } catch (error) {
+            console.error("Failed to consume SIWS nonce from Redis, trying cookie fallback:", error);
+          }
+
+          const cookieNonce = readNonceCookieValue(
+            ctx.getCookie(SIWS_NONCE_COOKIE_NAME),
+            walletAddress
+          );
+
+          if (
+            (!storedNonce || storedNonce !== messageNonce) &&
+            cookieNonce?.nonce !== messageNonce
+          ) {
             throw APIError.from("UNAUTHORIZED", {
               code: "EXPIRED_SOLANA_NONCE",
               message: "The Solana sign-in request has expired.",
             });
           }
+
+          ctx.setCookie(SIWS_NONCE_COOKIE_NAME, "", {
+            ...getNonceCookieOptions(true),
+            maxAge: 0,
+          });
+          ctx.setCookie(SIWS_NONCE_COOKIE_NAME, "", {
+            ...getNonceCookieOptions(false),
+            maxAge: 0,
+          });
 
           const isValidSignature = verifySIWSSignature(
             message,

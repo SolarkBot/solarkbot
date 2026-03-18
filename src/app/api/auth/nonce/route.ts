@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { storeNonce } from "@/lib/redis";
+import {
+  createNonceCookieValue,
+  getNonceCookieOptions,
+  SIWS_NONCE_COOKIE_NAME,
+} from "@/lib/auth/nonce";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +28,18 @@ export async function GET(request: NextRequest) {
   }
 
   const nonce = crypto.randomBytes(32).toString("hex");
+  try {
+    await storeNonce(walletAddress, nonce);
+  } catch (error) {
+    console.error("Failed to persist SIWS nonce in Redis, using cookie fallback:", error);
+  }
 
-  await storeNonce(walletAddress, nonce);
+  const response = NextResponse.json({ nonce });
+  response.cookies.set(
+    SIWS_NONCE_COOKIE_NAME,
+    createNonceCookieValue(walletAddress, nonce),
+    getNonceCookieOptions(request.nextUrl.protocol === "https:")
+  );
 
-  return NextResponse.json({ nonce });
+  return response;
 }
