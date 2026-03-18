@@ -179,29 +179,38 @@ function getFreeMessageIdentifier(walletAddress: string) {
 
 /** Store a nonce with 5-minute TTL. Redis is preferred, DB is the fallback. */
 export async function storeNonce(walletAddress: string, nonce: string): Promise<void> {
-  await runWithRedisFallback(
-    "storeNonce",
-    async (client) => {
-      await client.set(`nonce:${walletAddress}`, nonce, "EX", 300);
-    },
-    () => storeNonceInDatabase(walletAddress, nonce)
-  );
+  try {
+    await runWithRedisFallback(
+      "storeNonce",
+      async (client) => {
+        await client.set(`nonce:${walletAddress}`, nonce, "EX", 300);
+      },
+      () => storeNonceInDatabase(walletAddress, nonce)
+    );
+  } catch (error) {
+    console.error("Failed to store nonce in Redis and Postgres:", error);
+  }
 }
 
 /** Retrieve and delete a nonce (one-time use). */
 export async function consumeNonce(walletAddress: string): Promise<string | null> {
-  return runWithRedisFallback(
-    "consumeNonce",
-    async (client) => {
-      const identifier = `nonce:${walletAddress}`;
-      const nonce = await client.get(identifier);
-      if (nonce) {
-        await client.del(identifier);
-      }
-      return nonce;
-    },
-    () => consumeNonceFromDatabase(walletAddress)
-  );
+  try {
+    return await runWithRedisFallback(
+      "consumeNonce",
+      async (client) => {
+        const identifier = `nonce:${walletAddress}`;
+        const nonce = await client.get(identifier);
+        if (nonce) {
+          await client.del(identifier);
+        }
+        return nonce;
+      },
+      () => consumeNonceFromDatabase(walletAddress)
+    );
+  } catch (error) {
+    console.error("Failed to consume nonce from Redis and Postgres:", error);
+    return null;
+  }
 }
 
 /** Check and increment rate limit. Returns true if the request is allowed. */
@@ -210,62 +219,76 @@ export async function checkRateLimit(
   limit: number = 60,
   windowSeconds: number = 60
 ): Promise<boolean> {
-  return runWithRedisFallback(
-    "checkRateLimit",
-    async (client) => {
-      const key = `ratelimit:${walletAddress}`;
-      const current = await client.incr(key);
-      if (current === 1) {
-        await client.expire(key, windowSeconds);
+  try {
+    return await runWithRedisFallback(
+      "checkRateLimit",
+      async (client) => {
+        const key = `ratelimit:${walletAddress}`;
+        const current = await client.incr(key);
+        if (current === 1) {
+          await client.expire(key, windowSeconds);
+        }
+        return current <= limit;
+      },
+      async () => {
+        const identifier = getRateLimitIdentifier(walletAddress, windowSeconds);
+        const current = (await getCounterValue(identifier)) + 1;
+        await setCounterValue(
+          identifier,
+          current,
+          new Date(Date.now() + windowSeconds * 1000)
+        );
+        return current <= limit;
       }
-      return current <= limit;
-    },
-    async () => {
-      const identifier = getRateLimitIdentifier(walletAddress, windowSeconds);
-      const current = (await getCounterValue(identifier)) + 1;
-      await setCounterValue(
-        identifier,
-        current,
-        new Date(Date.now() + windowSeconds * 1000)
-      );
-      return current <= limit;
-    }
-  );
+    );
+  } catch (error) {
+    console.error("Failed to apply rate limiting in Redis and Postgres:", error);
+    return true;
+  }
 }
 
 /** Track free message usage per wallet per day */
 export async function checkFreeMessages(walletAddress: string): Promise<{ used: number; allowed: boolean }> {
   const maxFree = parseInt(process.env.FREE_MESSAGES_PER_DAY || "10", 10);
 
-  return runWithRedisFallback(
-    "checkFreeMessages",
-    async (client) => {
-      const key = getFreeMessageIdentifier(walletAddress);
-      const used = parseInt((await client.get(key)) || "0", 10);
-      return { used, allowed: used < maxFree };
-    },
-    async () => {
-      const used = await getCounterValue(getFreeMessageIdentifier(walletAddress));
-      return { used, allowed: used < maxFree };
-    }
-  );
+  try {
+    return await runWithRedisFallback(
+      "checkFreeMessages",
+      async (client) => {
+        const key = getFreeMessageIdentifier(walletAddress);
+        const used = parseInt((await client.get(key)) || "0", 10);
+        return { used, allowed: used < maxFree };
+      },
+      async () => {
+        const used = await getCounterValue(getFreeMessageIdentifier(walletAddress));
+        return { used, allowed: used < maxFree };
+      }
+    );
+  } catch (error) {
+    console.error("Failed to read free-message usage from Redis and Postgres:", error);
+    return { used: 0, allowed: true };
+  }
 }
 
 /** Increment free message counter */
 export async function incrementFreeMessages(walletAddress: string): Promise<void> {
-  await runWithRedisFallback(
-    "incrementFreeMessages",
-    async (client) => {
-      const key = getFreeMessageIdentifier(walletAddress);
-      const pipeline = client.pipeline();
-      pipeline.incr(key);
-      pipeline.expire(key, 86400);
-      await pipeline.exec();
-    },
-    async () => {
-      const identifier = getFreeMessageIdentifier(walletAddress);
-      const current = (await getCounterValue(identifier)) + 1;
-      await setCounterValue(identifier, current, getEndOfToday());
-    }
-  );
+  try {
+    await runWithRedisFallback(
+      "incrementFreeMessages",
+      async (client) => {
+        const key = getFreeMessageIdentifier(walletAddress);
+        const pipeline = client.pipeline();
+        pipeline.incr(key);
+        pipeline.expire(key, 86400);
+        await pipeline.exec();
+      },
+      async () => {
+        const identifier = getFreeMessageIdentifier(walletAddress);
+        const current = (await getCounterValue(identifier)) + 1;
+        await setCounterValue(identifier, current, getEndOfToday());
+      }
+    );
+  } catch (error) {
+    console.error("Failed to increment free-message usage in Redis and Postgres:", error);
+  }
 }

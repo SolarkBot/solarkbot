@@ -102,9 +102,9 @@ export function getRuntimeConfigIssues() {
     addIssue(
       issues,
       "missing-database-url",
-      "error",
+      "warning",
       "database",
-      "DATABASE_URL is missing. Production needs a hosted Postgres connection string."
+      "DATABASE_URL is missing. The app will run in stateless mode without saved chats until a hosted Postgres URL is configured."
     );
   } else {
     const databaseHost = getUrlHost(databaseUrl);
@@ -112,9 +112,9 @@ export function getRuntimeConfigIssues() {
       addIssue(
         issues,
         "local-database-url",
-        "error",
+        "warning",
         "database",
-        "DATABASE_URL points to localhost. Vercel cannot reach your local Postgres."
+        "DATABASE_URL points to localhost. Vercel cannot reach your local Postgres, so the app will run in stateless mode."
       );
     }
   }

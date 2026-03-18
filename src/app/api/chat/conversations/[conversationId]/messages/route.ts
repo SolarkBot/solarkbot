@@ -26,10 +26,7 @@ export async function GET(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json([], { status: 200 });
     }
 
     const conversation = await prisma.conversation.findFirst({
@@ -40,10 +37,7 @@ export async function GET(
     });
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: "Conversation not found" },
-        { status: 404 }
-      );
+      return NextResponse.json([], { status: 200 });
     }
 
     const messages = await prisma.message.findMany({
@@ -81,9 +75,6 @@ export async function GET(
     return NextResponse.json(formatted);
   } catch (error) {
     console.error("Messages API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json([], { status: 200 });
   }
 }

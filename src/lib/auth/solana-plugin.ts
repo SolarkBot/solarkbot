@@ -18,6 +18,13 @@ import {
   readNonceCookieValue,
   SIWS_NONCE_COOKIE_NAME,
 } from "./nonce";
+import {
+  createFallbackSessionCookieValue,
+  FALLBACK_SESSION_COOKIE_NAME,
+  getFallbackSessionCookieOptions,
+  readFallbackSessionCookie,
+  shouldUseSecureAuthCookies,
+} from "./fallback-session";
 
 const solanaSignInBodySchema = z.object({
   message: z.string().min(1),
@@ -196,6 +203,21 @@ function getSessionExpiryDate(rememberMe?: boolean) {
   return new Date(Date.now() + durationMs);
 }
 
+function createFallbackAuthResult(walletAddress: string, rememberMe?: boolean) {
+  const cookieValue = createFallbackSessionCookieValue(walletAddress, rememberMe);
+  const parsed = readFallbackSessionCookie(cookieValue);
+
+  if (!parsed) {
+    throw new Error("Failed to create fallback session payload.");
+  }
+
+  return {
+    cookieValue,
+    session: parsed.session,
+    user: parsed.user,
+  };
+}
+
 async function createWalletSession(
   ctx: any,
   userId: string,
@@ -305,18 +327,54 @@ export function solanaAuth(): BetterAuthPlugin {
             });
           }
 
-          let user;
-          let session;
+          const secureAuthCookies = shouldUseSecureAuthCookies(ctx.headers);
+          const fallbackAuth = createFallbackAuthResult(walletAddress, rememberMe);
+
+          let user: any = fallbackAuth.user;
+          let session: any = fallbackAuth.session;
+          let persistenceWarning: string | null = null;
+
           try {
-            user = await findOrCreateWalletUser(walletAddress);
-            await upsertWalletAccount(user.id, walletAddress);
-            session = await createWalletSession(ctx, user.id, rememberMe);
+            const persistedUser = await findOrCreateWalletUser(walletAddress);
+            await upsertWalletAccount(persistedUser.id, walletAddress);
+            const persistedSession = await createWalletSession(
+              ctx,
+              persistedUser.id,
+              rememberMe
+            );
+
+            if (!persistedSession) {
+              throw new Error("Unable to create a Better Auth session.");
+            }
+
+            user = persistedUser;
+            session = persistedSession;
+
+            ctx.context.setNewSession({
+              session,
+              user,
+            });
+
+            try {
+              await setSessionCookie(
+                ctx,
+                {
+                  session,
+                  user,
+                },
+                rememberMe === false
+              );
+            } catch (error) {
+              console.error("Failed to set Better Auth session cookie, using fallback session cookie:", error);
+              user = fallbackAuth.user;
+              session = fallbackAuth.session;
+              persistenceWarning = getPersistenceFailureMessage(error);
+            }
           } catch (error) {
             console.error("Solana sign-in persistence failed:", error);
-            throw APIError.from("INTERNAL_SERVER_ERROR", {
-              code: "SOLANA_AUTH_PERSISTENCE_FAILED",
-              message: getPersistenceFailureMessage(error),
-            });
+            user = fallbackAuth.user;
+            session = fallbackAuth.session;
+            persistenceWarning = getPersistenceFailureMessage(error);
           }
 
           if (!session) {
@@ -326,22 +384,13 @@ export function solanaAuth(): BetterAuthPlugin {
             });
           }
 
-          ctx.context.setNewSession({
-            session,
-            user,
+          ctx.setCookie(FALLBACK_SESSION_COOKIE_NAME, fallbackAuth.cookieValue, {
+            ...getFallbackSessionCookieOptions(secureAuthCookies, rememberMe),
           });
-
-          await setSessionCookie(
-            ctx,
-            {
-              session,
-              user,
-            },
-            rememberMe === false
-          );
 
           return ctx.json({
             token: session.token,
+            warning: persistenceWarning ?? undefined,
             user: {
               id: user.id,
               name: user.name,

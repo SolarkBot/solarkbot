@@ -48,18 +48,6 @@ export async function POST(request: NextRequest) {
 
     const { message, conversationId } = parsed.data;
 
-    // Get user from DB
-    const user = await prisma.user.findUnique({
-      where: { walletAddress },
-    });
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check free message quota (skip for paid users / future payment check)
     const freeCheck = await checkFreeMessages(walletAddress);
     if (!freeCheck.allowed) {
       return NextResponse.json(
@@ -72,107 +60,120 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get or create conversation
-    let conversation;
-    if (conversationId) {
-      conversation = await prisma.conversation.findFirst({
-        where: { id: conversationId, userId: user.id },
-        include: { messages: { orderBy: { createdAt: "asc" }, take: 50 } },
-      });
-      if (!conversation) {
-        return NextResponse.json(
-          { success: false, error: "Conversation not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      conversation = await prisma.conversation.create({
-        data: {
-          userId: user.id,
-          title: message.slice(0, 100),
-        },
-        include: { messages: true },
-      });
-    }
-
-    // Build conversation history from DB messages
-    // For assistant messages with tool calls, we also inject the tool_result messages
-    // that Anthropic requires after every tool_use block.
+    let persistenceEnabled = false;
+    let userId = walletAddress;
+    let conversation: { id: string } | null = null;
     const conversationHistory: ChatMessage[] = [];
-    for (const msg of conversation.messages) {
-      const toolCalls = msg.toolCalls
-        ? (msg.toolCalls as unknown as ChatMessage["toolCalls"])
-        : undefined;
 
-      conversationHistory.push({
-        role: msg.role as "user" | "assistant" | "tool",
-        content: msg.content,
-        toolCallId: undefined,
-        toolCalls,
+    try {
+      const user = await prisma.user.findUnique({
+        where: { walletAddress },
       });
 
-      // If assistant message had tool calls, inject tool_result messages
-      if (msg.role === "assistant" && toolCalls && toolCalls.length > 0) {
-        const toolResults = msg.toolResults as { id: string; name: string; result: unknown }[] | null;
-        for (let i = 0; i < toolCalls.length; i++) {
-          const tc = toolCalls[i];
-          const result = toolResults?.[i]?.result ?? { status: "completed" };
-          conversationHistory.push({
-            role: "tool",
-            content: JSON.stringify(result),
-            toolCallId: tc.id,
+      if (user) {
+        userId = user.id;
+
+        let dbConversation;
+        if (conversationId) {
+          dbConversation = await prisma.conversation.findFirst({
+            where: { id: conversationId, userId: user.id },
+            include: { messages: { orderBy: { createdAt: "asc" }, take: 50 } },
+          });
+        } else {
+          dbConversation = await prisma.conversation.create({
+            data: {
+              userId: user.id,
+              title: message.slice(0, 100),
+            },
+            include: { messages: true },
+          });
+        }
+
+        if (dbConversation) {
+          conversation = { id: dbConversation.id };
+          persistenceEnabled = true;
+
+          for (const msg of dbConversation.messages) {
+            const toolCalls = msg.toolCalls
+              ? (msg.toolCalls as unknown as ChatMessage["toolCalls"])
+              : undefined;
+
+            conversationHistory.push({
+              role: msg.role as "user" | "assistant" | "tool",
+              content: msg.content,
+              toolCallId: undefined,
+              toolCalls,
+            });
+
+            if (msg.role === "assistant" && toolCalls && toolCalls.length > 0) {
+              const toolResults = msg.toolResults as { id: string; name: string; result: unknown }[] | null;
+              for (let i = 0; i < toolCalls.length; i++) {
+                const tc = toolCalls[i];
+                const result = toolResults?.[i]?.result ?? { status: "completed" };
+                conversationHistory.push({
+                  role: "tool",
+                  content: JSON.stringify(result),
+                  toolCallId: tc.id,
+                });
+              }
+            }
+          }
+
+          await prisma.message.create({
+            data: {
+              conversationId: dbConversation.id,
+              role: "user",
+              content: message,
+            },
           });
         }
       }
+    } catch (error) {
+      console.error("Chat persistence unavailable, using stateless mode:", error);
     }
-
-    // Save user message
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: "user",
-        content: message,
-      },
-    });
 
     // Run agent executor
     const agentResponse = await runAgentExecutor(
       message,
       conversationHistory,
       walletAddress,
-      user.id
+      userId
     );
 
-    // Save assistant response
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: "assistant",
-        content: agentResponse.response,
-        toolCalls:
-          agentResponse.toolResults.length > 0
-            ? (agentResponse.toolResults.map((tr) => ({
-                id: tr.toolCallId,
-                name: tr.toolName,
-                arguments: tr.arguments,
-              })) as unknown as import("@prisma/client").Prisma.InputJsonValue)
-            : undefined,
-        toolResults:
-          agentResponse.toolResults.length > 0
-            ? (agentResponse.toolResults.map((tr) => ({
-                id: tr.toolCallId,
-                name: tr.toolName,
-                result: tr.result,
-              })) as unknown as import("@prisma/client").Prisma.InputJsonValue)
-            : undefined,
-      },
-    });
+    if (persistenceEnabled && conversation) {
+      try {
+        await prisma.message.create({
+          data: {
+            conversationId: conversation.id,
+            role: "assistant",
+            content: agentResponse.response,
+            toolCalls:
+              agentResponse.toolResults.length > 0
+                ? (agentResponse.toolResults.map((tr) => ({
+                    id: tr.toolCallId,
+                    name: tr.toolName,
+                    arguments: tr.arguments,
+                  })) as unknown as import("@prisma/client").Prisma.InputJsonValue)
+                : undefined,
+            toolResults:
+              agentResponse.toolResults.length > 0
+                ? (agentResponse.toolResults.map((tr) => ({
+                    id: tr.toolCallId,
+                    name: tr.toolName,
+                    result: tr.result,
+                  })) as unknown as import("@prisma/client").Prisma.InputJsonValue)
+                : undefined,
+          },
+        });
 
-    // Update conversation timestamp
-    await prisma.conversation.update({
-      where: { id: conversation.id },
-      data: { updatedAt: new Date() },
-    });
+        await prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { updatedAt: new Date() },
+        });
+      } catch (error) {
+        console.error("Failed to persist assistant response, continuing statelessly:", error);
+      }
+    }
 
     // Increment free message counter
     await incrementFreeMessages(walletAddress);
@@ -180,10 +181,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        conversationId: conversation.id,
+        conversationId: conversation?.id ?? null,
         response: agentResponse.response,
         toolResults: agentResponse.toolResults,
         pendingTransactions: agentResponse.pendingTransactions,
+        stateless: !persistenceEnabled,
       },
     });
   } catch (error) {

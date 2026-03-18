@@ -58,17 +58,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from DB
-    const user = await prisma.user.findUnique({
-      where: { walletAddress },
-    });
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
     const freeTier = await checkFreeMessages(walletAddress);
     if (!freeTier.allowed) {
       return NextResponse.json(
@@ -81,15 +70,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log task
-    const agentTask = await prisma.agentTask.create({
-      data: {
-        userId: user.id,
-        toolName,
-        parameters: parameters as unknown as import("@prisma/client").Prisma.InputJsonValue,
-        status: "executing",
-      },
-    });
+    let agentTask: { id: string } | null = null;
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { walletAddress },
+      });
+
+      if (user) {
+        agentTask = await prisma.agentTask.create({
+          data: {
+            userId: user.id,
+            toolName,
+            parameters: parameters as unknown as import("@prisma/client").Prisma.InputJsonValue,
+            status: "executing",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Agent task persistence unavailable, continuing without task log:", error);
+    }
 
     try {
       const result = await executeTool(toolName, parameters, {
@@ -98,19 +98,21 @@ export async function POST(request: NextRequest) {
 
       await incrementFreeMessages(walletAddress);
 
-      await prisma.agentTask.update({
-        where: { id: agentTask.id },
-        data: {
-          status: "completed",
-          result: result as unknown as import("@prisma/client").Prisma.InputJsonValue,
-          completedAt: new Date(),
-        },
-      });
+      if (agentTask) {
+        await prisma.agentTask.update({
+          where: { id: agentTask.id },
+          data: {
+            status: "completed",
+            result: result as unknown as import("@prisma/client").Prisma.InputJsonValue,
+            completedAt: new Date(),
+          },
+        });
+      }
 
       return NextResponse.json({
         success: true,
         data: {
-          taskId: agentTask.id,
+          taskId: agentTask?.id ?? null,
           toolName,
           result,
         },
@@ -119,20 +121,22 @@ export async function POST(request: NextRequest) {
       const errorMessage =
         toolError instanceof Error ? toolError.message : "Tool execution failed";
 
-      await prisma.agentTask.update({
-        where: { id: agentTask.id },
-        data: {
-          status: "failed",
-          result: { error: errorMessage },
-          completedAt: new Date(),
-        },
-      });
+      if (agentTask) {
+        await prisma.agentTask.update({
+          where: { id: agentTask.id },
+          data: {
+            status: "failed",
+            result: { error: errorMessage },
+            completedAt: new Date(),
+          },
+        });
+      }
 
       return NextResponse.json(
         {
           success: false,
           error: errorMessage,
-          taskId: agentTask.id,
+          taskId: agentTask?.id ?? null,
         },
         { status: 500 }
       );
