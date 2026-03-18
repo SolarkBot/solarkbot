@@ -5,7 +5,7 @@
   "description": "SolarkBot — A Crypto-Native AI Assistant on Solana",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/vercel-build.mjs",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",

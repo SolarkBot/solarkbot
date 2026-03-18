@@ -1,3 +1,5 @@
+import crypto from "crypto";
+import { Prisma } from "@prisma/client";
 import { APIError, createAuthEndpoint } from "better-auth/api";
 import { type BetterAuthPlugin } from "better-auth";
 import { setSessionCookie } from "better-auth/cookies";
@@ -25,6 +27,158 @@ const solanaSignInBodySchema = z.object({
 
 function getWalletEmail(walletAddress: string) {
   return `${walletAddress}@wallet.solarkbot.local`;
+}
+
+function isPrismaUniqueError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
+}
+
+async function findOrCreateWalletUser(walletAddress: string) {
+  const now = new Date();
+  const email = getWalletEmail(walletAddress);
+  const existingUser = await prisma.user.findFirst({
+    where: { walletAddress },
+  });
+
+  if (existingUser) {
+    return prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        email,
+        name: walletAddress,
+        emailVerified: true,
+        image: null,
+        lastLoginAt: now,
+      },
+    });
+  }
+
+  try {
+    return await prisma.user.create({
+      data: {
+        walletAddress,
+        email,
+        name: walletAddress,
+        emailVerified: true,
+        image: null,
+        lastLoginAt: now,
+      },
+    });
+  } catch (error) {
+    if (!isPrismaUniqueError(error)) {
+      throw error;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { walletAddress },
+    });
+    if (!user) {
+      throw error;
+    }
+
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email,
+        name: walletAddress,
+        emailVerified: true,
+        image: null,
+        lastLoginAt: now,
+      },
+    });
+  }
+}
+
+async function upsertWalletAccount(userId: string, walletAddress: string) {
+  const now = new Date();
+  const existingAccount = await prisma.account.findFirst({
+    where: {
+      providerId: "solana",
+      accountId: walletAddress,
+    },
+  });
+
+  if (existingAccount) {
+    return prisma.account.update({
+      where: { id: existingAccount.id },
+      data: {
+        userId,
+        updatedAt: now,
+      },
+    });
+  }
+
+  try {
+    return await prisma.account.create({
+      data: {
+        userId,
+        providerId: "solana",
+        accountId: walletAddress,
+      },
+    });
+  } catch (error) {
+    if (!isPrismaUniqueError(error)) {
+      throw error;
+    }
+
+    const account = await prisma.account.findFirst({
+      where: {
+        providerId: "solana",
+        accountId: walletAddress,
+      },
+    });
+    if (!account) {
+      throw error;
+    }
+
+    return prisma.account.update({
+      where: { id: account.id },
+      data: {
+        userId,
+        updatedAt: now,
+      },
+    });
+  }
+}
+
+function getSessionExpiryDate(rememberMe?: boolean) {
+  const durationMs = rememberMe === false
+    ? 1000 * 60 * 60 * 24
+    : 1000 * 60 * 60 * 24 * 30;
+
+  return new Date(Date.now() + durationMs);
+}
+
+async function createWalletSession(
+  ctx: any,
+  userId: string,
+  rememberMe?: boolean
+) {
+  try {
+    const session = await ctx.context.internalAdapter.createSession(
+      userId,
+      rememberMe === false
+    );
+
+    if (session) {
+      return session;
+    }
+  } catch (error) {
+    console.error("Better Auth internal session creation failed, using Prisma fallback:", error);
+  }
+
+  return prisma.session.create({
+    data: {
+      userId,
+      token: crypto.randomBytes(32).toString("base64url"),
+      expiresAt: getSessionExpiryDate(rememberMe),
+      ipAddress: ctx.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      userAgent: ctx.headers?.get("user-agent") ?? null,
+    },
+  });
 }
 
 export function solanaAuth(): BetterAuthPlugin {
@@ -107,49 +261,20 @@ export function solanaAuth(): BetterAuthPlugin {
             });
           }
 
-          const now = new Date();
-          const email = getWalletEmail(walletAddress);
-          const user = await prisma.user.upsert({
-            where: { walletAddress },
-            update: {
-              email,
-              name: walletAddress,
-              emailVerified: true,
-              image: null,
-              lastLoginAt: now,
-            },
-            create: {
-              walletAddress,
-              email,
-              name: walletAddress,
-              emailVerified: true,
-              image: null,
-              lastLoginAt: now,
-            },
-          });
+          let user;
+          let session;
+          try {
+            user = await findOrCreateWalletUser(walletAddress);
+            await upsertWalletAccount(user.id, walletAddress);
+            session = await createWalletSession(ctx, user.id, rememberMe);
+          } catch (error) {
+            console.error("Solana sign-in persistence failed:", error);
+            throw APIError.from("INTERNAL_SERVER_ERROR", {
+              code: "SOLANA_AUTH_PERSISTENCE_FAILED",
+              message: "Authentication storage is not ready yet. Please try again in a moment.",
+            });
+          }
 
-          await prisma.account.upsert({
-            where: {
-              providerId_accountId: {
-                providerId: "solana",
-                accountId: walletAddress,
-              },
-            },
-            update: {
-              userId: user.id,
-              updatedAt: now,
-            },
-            create: {
-              userId: user.id,
-              providerId: "solana",
-              accountId: walletAddress,
-            },
-          });
-
-          const session = await ctx.context.internalAdapter.createSession(
-            user.id,
-            rememberMe === false
-          );
           if (!session) {
             throw APIError.from("INTERNAL_SERVER_ERROR", {
               code: "SESSION_CREATION_FAILED",
