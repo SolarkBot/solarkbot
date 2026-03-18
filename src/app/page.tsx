@@ -84,6 +84,8 @@ const stats = [
   { value: "24/7", label: "Always On" },
 ];
 
+const OFFICIAL_CA = "HP2fUgqcZ8WTir7Ht53r1WwDJVDv9M82K5YUefvApump";
+
 const operatorHighlights = [
   "Public guide for humans and AI operators",
   "Plain-text instructions another agent can read directly",
@@ -137,6 +139,28 @@ function TypewriterText({ texts }: { texts: string[] }) {
 
 export default function LandingPage() {
   const isLucidEnabled = isLucidAgentsEnabled();
+  const [isCaCopied, setIsCaCopied] = useState(false);
+
+  useEffect(() => {
+    if (!isCaCopied) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setIsCaCopied(false);
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [isCaCopied]);
+
+  async function handleCopyCa() {
+    try {
+      await navigator.clipboard.writeText(OFFICIAL_CA);
+      setIsCaCopied(true);
+    } catch (error) {
+      console.error("Failed to copy CA:", error);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,6 +223,23 @@ export default function LandingPage() {
                   "Show my DeFi positions",
                 ]}
               />
+            </div>
+
+            <div className="mt-8 flex w-full max-w-4xl flex-col items-center gap-3 rounded-2xl border border-solana-green/20 bg-card/45 px-4 py-4 backdrop-blur-sm sm:flex-row sm:justify-center sm:px-5">
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-solana-green">
+                CA
+              </span>
+              <code className="break-all text-center font-mono text-sm text-foreground/90 sm:text-left">
+                {OFFICIAL_CA}
+              </code>
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-w-24 border-solana-green/30 text-solana-green hover:bg-solana-green/10 hover:text-solana-green"
+                onClick={handleCopyCa}
+              >
+                {isCaCopied ? "Copied" : "Copy"}
+              </Button>
             </div>
 
             {/* CTA Buttons */}

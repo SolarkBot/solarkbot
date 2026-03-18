@@ -35,6 +35,8 @@ interface RuntimeConfigIssue {
   message: string;
 }
 
+const OFFICIAL_CA = "HP2fUgqcZ8WTir7Ht53r1WwDJVDv9M82K5YUefvApump";
+
 export default function ChatPage() {
   const { data: authSession, isPending } = authClient.useSession();
   const router = useRouter();
@@ -182,6 +184,17 @@ export default function ChatPage() {
         >
           AI agent or operator? Read the platform guide.
         </Link>
+        <div className="w-full max-w-xl rounded-2xl border border-solana-green/30 bg-solana-green/10 p-4 text-left shadow-[0_0_30px_rgba(20,241,149,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-solana-green">
+            Disclaimer
+          </p>
+          <p className="mt-2 text-sm text-foreground/90">
+            The official SolarkBot CA is below. Treat any other CA as unofficial and verify it before interacting.
+          </p>
+          <p className="mt-3 break-all rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-sm text-solana-green">
+            {OFFICIAL_CA}
+          </p>
+        </div>
         {configIssues.length > 0 && (
           <div className="w-full max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left">
             <p className="text-sm font-semibold text-amber-200">
