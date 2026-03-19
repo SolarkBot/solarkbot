@@ -8,6 +8,7 @@ import { Logo } from "@/components/Logo";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { isLucidAgentsEnabled } from "@/lib/features";
+import { roadmapSignals, upcomingFeatureGroups } from "@/lib/product-roadmap";
 import {
   Wallet,
   Zap,
@@ -21,10 +22,6 @@ import {
   Search,
   Send,
   ChevronRight,
-  Bell,
-  BarChart3,
-  Brain,
-  FileText,
 } from "lucide-react";
 
 const features = [
@@ -100,120 +97,6 @@ const lucidSteps = [
   "Connect xgate MCP with SIWE and a session token",
   "Install the lucid-agent-creator skill for Claude or Cursor",
   "Prompt your AI to write the handler and call create_lucid_agent",
-];
-
-const roadmapSignals = [
-  "Assistant to operator",
-  "Simulate before signing",
-  "Automate strategy",
-  "Protocol-native actions",
-];
-
-const upcomingFeatureGroups = [
-  {
-    icon: BarChart3,
-    title: "Portfolio Intelligence",
-    description:
-      "Surface exposure, PnL, and concentration risk before the user makes the next move.",
-    points: [
-      "SOL exposure checks",
-      "PnL across tokens and NFTs",
-      "Volatility and concentration scoring",
-    ],
-    example: '"Am I overexposed to SOL?"',
-    gradient: "from-sky-500 to-cyan-400",
-  },
-  {
-    icon: FileText,
-    title: "Transaction Explanation",
-    description:
-      "Translate every signature request into human language before and after execution.",
-    points: [
-      "Swap route previews",
-      "Fee and slippage breakdowns",
-      "Post-trade settlement summaries",
-    ],
-    example: '"This swaps 1 SOL to ~150 USDC via Jupiter."',
-    gradient: "from-amber-500 to-orange-400",
-  },
-  {
-    icon: Brain,
-    title: "Memory Layer",
-    description:
-      "Remember the tokens, addresses, and risk settings that make repeat flows feel personal.",
-    points: [
-      "Favorite tokens",
-      "Frequent recipients",
-      "Saved slippage and risk preferences",
-    ],
-    example: '"Use low slippage like last time."',
-    gradient: "from-violet-500 to-fuchsia-400",
-  },
-  {
-    icon: Bell,
-    title: "Alerts and Automation",
-    description:
-      "Watch markets, trigger rules, and move from reactive chat to always-on wallet operations.",
-    points: [
-      "Price alerts",
-      "Recurring buys",
-      "Auto-exit conditions",
-    ],
-    example: '"Alert me if SOL drops below $100."',
-    gradient: "from-solana-green to-emerald-400",
-  },
-  {
-    icon: Zap,
-    title: "Strategy Execution",
-    description:
-      "Handle complex multi-step tasks with one instruction instead of a trail of manual clicks.",
-    points: [
-      "Best-pool staking",
-      "Claim-and-restake flows",
-      "Swap-then-send actions",
-    ],
-    example: '"Swap SOL to USDC and send it to Alice."',
-    gradient: "from-solana-purple to-indigo-500",
-  },
-  {
-    icon: Coins,
-    title: "DeFi Power Features",
-    description:
-      "Go deeper for serious users with yield discovery, copy trading, and portfolio analytics.",
-    points: [
-      "Yield aggregation",
-      "Copy smart-money wallets",
-      "Win rate, ROI, and spend analytics",
-    ],
-    example: '"Stake my SOL in the best pool."',
-    gradient: "from-rose-500 to-pink-400",
-  },
-  {
-    icon: Globe,
-    title: "Ecosystem Integrations",
-    description:
-      "Turn SolarkBot into the front door for swaps, staking, NFTs, perps, and future cross-chain flows.",
-    points: [
-      "Jupiter, Marinade, Jito",
-      "Tensor and Magic Eden",
-      "Bridge and multi-wallet support",
-    ],
-    example: '"Show my NFTs and their floor prices."',
-    gradient: "from-teal-500 to-green-400",
-  },
-  {
-    icon: Shield,
-    title: "Security, Platform, and UX",
-    description:
-      "Ship the trust layer and power-user surface that makes the product sticky and safe to use daily.",
-    points: [
-      "Simulation mode and scam detection",
-      "Plugins, SDK, and referral loops",
-      "Voice mode, shortcuts, and chat templates",
-    ],
-    example: '"Hey Solark, swap 1 SOL."',
-    gradient: "from-slate-300 to-zinc-100",
-  },
 ];
 
 function TypewriterText({ texts }: { texts: string[] }) {
@@ -560,7 +443,7 @@ export default function LandingPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {upcomingFeatureGroups.map((item) => (
               <Card
-                key={item.title}
+                key={item.id}
                 className="group relative h-full overflow-hidden border-border/50 bg-card/55 backdrop-blur-sm transition-all duration-300 hover:border-solana-purple/30 hover:shadow-[0_0_30px_rgba(153,69,255,0.08)]"
               >
                 <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.gradient}`} />
@@ -601,6 +484,15 @@ export default function LandingPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <Link href="/chat">
+              <Button variant="solana" size="lg" className="group gap-2 px-8">
+                Open Operator Workspace
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

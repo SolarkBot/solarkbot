@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble, type MessageData, type AgentAction } from "./MessageBubble";
 import { AgentActionCard } from "./AgentActionCard";
 import { PaymentGate } from "./PaymentGate";
-import { Logo } from "@/components/Logo";
+import { OperatorWorkspace } from "./OperatorWorkspace";
+import { truncateAddress } from "@/lib/utils";
 import { Send, Loader2 } from "lucide-react";
 
 interface ChatWindowProps {
@@ -72,6 +73,11 @@ export function ChatWindow({ conversationId, onConversationCreated }: ChatWindow
     textarea.style.height = "auto";
     textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
   }, [input]);
+
+  function handlePromptSelect(prompt: string) {
+    setInput(prompt);
+    textareaRef.current?.focus();
+  }
 
   async function handleSend() {
     const trimmed = input.trim();
@@ -180,33 +186,23 @@ export function ChatWindow({ conversationId, onConversationCreated }: ChatWindow
 
   // Empty state
   if (messages.length === 0 && !isLoading) {
+    const networkLabel = connection.rpcEndpoint.includes("mainnet")
+      ? "Mainnet"
+      : "Devnet";
+
     return (
-      <div className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
-          <Logo size={64} />
-          <div className="text-center">
-            <h2 className="text-xl font-semibold">How can I help you?</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ask me about Solana wallets, token prices, transactions, and more.
-            </p>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <ScrollArea className="flex-1">
+          <div className="px-4 py-4">
+            <div className="mx-auto max-w-6xl rounded-[32px] border border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent p-1">
+              <OperatorWorkspace
+                walletLabel={publicKey ? truncateAddress(publicKey.toBase58()) : null}
+                networkLabel={networkLabel}
+                onPromptSelect={handlePromptSelect}
+              />
+            </div>
           </div>
-          <div className="mt-2 flex flex-wrap justify-center gap-2">
-            {[
-              "What's my SOL balance?",
-              "Check the price of SOL",
-              "Resolve toly.sol",
-              "Send 0.01 SOL to...",
-            ].map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => setInput(suggestion)}
-                className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-solana-purple/50 hover:text-foreground"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
+        </ScrollArea>
 
         {/* Input area */}
         <InputArea

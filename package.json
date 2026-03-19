@@ -10,6 +10,7 @@
     "start": "next start",
     "video:studio": "remotion studio remotion/index.ts",
     "video:render": "remotion render remotion/index.ts SolarkBotLaunch out/solarkbot-launch.mp4",
+    "video:render:upcoming": "remotion render remotion/index.ts SolarkBotUpcomingFeatures out/solarkbot-upcoming-features.mp4",
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
