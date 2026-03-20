@@ -1,14 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble, type MessageData, type AgentAction } from "./MessageBubble";
 import { AgentActionCard } from "./AgentActionCard";
 import { PaymentGate } from "./PaymentGate";
-import { OperatorWorkspace } from "./OperatorWorkspace";
-import { truncateAddress } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 import { Send, Loader2 } from "lucide-react";
 
 interface ChatWindowProps {
@@ -17,9 +15,6 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ conversationId, onConversationCreated }: ChatWindowProps) {
-  const { publicKey } = useWallet();
-  const { connection } = useConnection();
-
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -186,23 +181,43 @@ export function ChatWindow({ conversationId, onConversationCreated }: ChatWindow
 
   // Empty state
   if (messages.length === 0 && !isLoading) {
-    const networkLabel = connection.rpcEndpoint.includes("mainnet")
-      ? "Mainnet"
-      : "Devnet";
-
     return (
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <ScrollArea className="flex-1">
-          <div className="px-4 py-4">
-            <div className="mx-auto max-w-6xl rounded-[32px] border border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent p-1">
-              <OperatorWorkspace
-                walletLabel={publicKey ? truncateAddress(publicKey.toBase58()) : null}
-                networkLabel={networkLabel}
-                onPromptSelect={handlePromptSelect}
-              />
+      <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 items-center justify-center px-4 py-8">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="text-center">
+              <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-[22px] border border-solana-purple/20 bg-gradient-to-br from-solana-purple/15 to-solana-green/10 shadow-[0_0_40px_rgba(153,69,255,0.08)]">
+                <Logo size={42} />
+              </div>
+              <h2 className="mt-6 text-2xl font-semibold tracking-tight sm:text-3xl">
+                How can I help you?
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+                Ask about balances, prices, swaps, transfers, wallet activity, or
+                anything else you want to do on Solana.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {[
+                "What's my SOL balance?",
+                "Check the price of SOL",
+                "Swap 1 SOL to USDC",
+                "Send 0.01 SOL to alice.sol",
+                "Resolve toly.sol",
+                "Show my recent wallet activity",
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => handlePromptSelect(suggestion)}
+                  className="rounded-2xl border border-border/60 bg-card/40 px-4 py-4 text-left text-sm text-foreground/90 transition-colors hover:border-solana-purple/40 hover:bg-card/70"
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Input area */}
         <InputArea
