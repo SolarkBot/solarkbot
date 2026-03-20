@@ -7,14 +7,29 @@ import { MessageBubble, type MessageData, type AgentAction } from "./MessageBubb
 import { AgentActionCard } from "./AgentActionCard";
 import { PaymentGate } from "./PaymentGate";
 import { Logo } from "@/components/Logo";
-import { Send, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Send } from "lucide-react";
 
 interface ChatWindowProps {
   conversationId: string | null;
+  resetKey: number;
   onConversationCreated?: (id: string) => void;
 }
 
-export function ChatWindow({ conversationId, onConversationCreated }: ChatWindowProps) {
+const followUpSuggestions = [
+  "Check the price of SOL",
+  "Show my recent wallet activity",
+  "Swap 1 SOL to USDC",
+  "Explain this transaction before I sign",
+  "Show my DeFi positions",
+  "Send 0.01 SOL to alice.sol",
+  "What can you do with my wallet?",
+];
+
+export function ChatWindow({
+  conversationId,
+  resetKey,
+  onConversationCreated,
+}: ChatWindowProps) {
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +53,8 @@ export function ChatWindow({ conversationId, onConversationCreated }: ChatWindow
   useEffect(() => {
     if (!conversationId) {
       setMessages([]);
+      setInput("");
+      setPaymentRequired(false);
       return;
     }
 
@@ -59,7 +76,7 @@ export function ChatWindow({ conversationId, onConversationCreated }: ChatWindow
     return () => {
       cancelled = true;
     };
-  }, [conversationId]);
+  }, [conversationId, resetKey]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -271,6 +288,35 @@ export function ChatWindow({ conversationId, onConversationCreated }: ChatWindow
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
+
+      {messages.length > 0 && !isLoading ? (
+        <div className="border-t border-border/60 bg-card/20 px-4 py-3">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Try these next
+              </p>
+              <p className="hidden text-xs text-muted-foreground sm:block">
+                Scroll sideways for more actions
+              </p>
+            </div>
+            <div className="overflow-x-auto pb-1">
+              <div className="flex min-w-max gap-2">
+                {followUpSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => handlePromptSelect(suggestion)}
+                    className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm text-foreground/90 transition-colors hover:border-solana-purple/40 hover:bg-background"
+                  >
+                    <span>{suggestion}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Input area */}
       <InputArea
