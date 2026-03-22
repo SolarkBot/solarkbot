@@ -66,12 +66,13 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!publicKey || !connection) return;
+    const currentPublicKey = publicKey;
 
     let cancelled = false;
 
     async function fetchBalance() {
       try {
-        const balance = await connection.getBalance(publicKey);
+        const balance = await connection.getBalance(currentPublicKey);
         if (!cancelled) setSolBalance(balance);
       } catch {
         // Ignore transient balance fetch failures.
