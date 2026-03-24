@@ -85,6 +85,12 @@ const stats = [
   { value: "24/7", label: "Always On" },
 ];
 
+const dexHighlights = [
+  "Unified swaps, discovery, and execution in one surface",
+  "Built to sit beside SolarkBot instead of replacing it",
+  "Open the live cinematic swap floor directly on solarkbot.xyz",
+];
+
 const OFFICIAL_CA = "HP2fUgqcZ8WTir7Ht53r1WwDJVDv9M82K5YUefvApump";
 
 const operatorHighlights = [
@@ -265,6 +271,102 @@ export default function LandingPage() {
                   <ChevronRight className="h-4 w-4" />
                 </a>
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Solark DEX Teaser */}
+      <section className="relative overflow-hidden border-y border-border/40 bg-card/20 py-20">
+        <div className="absolute inset-0">
+          <div className="absolute -left-16 top-0 h-72 w-72 rounded-full bg-solana-purple/12 blur-[110px]" />
+          <div className="absolute right-0 top-8 h-80 w-80 rounded-full bg-solana-green/10 blur-[125px]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-4">
+          <div className="grid gap-8 overflow-hidden rounded-[32px] border border-white/10 bg-[#070b11]/85 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:p-10">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-1.5 text-sm text-amber-100">
+                <Coins className="h-3.5 w-3.5" />
+                Live on the main domain
+              </div>
+              <h2 className="mt-6 text-3xl font-bold tracking-tight sm:text-5xl">
+                Meet{" "}
+                <span className="bg-gradient-to-r from-solana-purple via-white to-solana-green bg-clip-text text-transparent">
+                  Solark DEX
+                </span>
+              </h2>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+                Open the dedicated Solark trading floor for Solana-native swaps. The DEX now
+                lives at <span className="font-mono text-foreground/90">solarkbot.xyz/dex</span>
+                {" "}and stays connected to the rest of the product.
+              </p>
+
+              <div className="mt-8 grid gap-3">
+                {dexHighlights.map((highlight) => (
+                  <div
+                    key={highlight}
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-foreground/90"
+                  >
+                    {highlight}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+                <Link href="/dex">
+                  <Button
+                    variant="solana"
+                    size="lg"
+                    className="group gap-2 px-8"
+                  >
+                    Solark DEX
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+                <div className="text-sm text-muted-foreground">
+                  Opens the live DEX in the same tab at <span className="font-mono text-foreground/90">/dex</span>.
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[28px] border border-white/10 bg-black/25">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <span className="text-xs uppercase tracking-[0.28em] text-muted-foreground">
+                  Solark DEX Preview Slot
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                </div>
+              </div>
+              <div className="space-y-4 px-5 py-6">
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-solana-purple/15 to-solana-green/10 p-5">
+                  <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                    Status
+                  </div>
+                  <div className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                    Live entrypoint
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                    Route
+                  </div>
+                  <div className="mt-3 font-mono text-sm leading-7 text-solana-green">
+                    https://solarkbot.xyz/dex
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <div className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                    Product role
+                  </div>
+                  <div className="mt-3 text-sm leading-7 text-foreground/90">
+                    Solark DEX handles the dedicated swap experience while SolarkBot continues
+                    to own the main marketing, wallet, and agent surfaces.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

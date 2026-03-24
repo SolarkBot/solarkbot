@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import WalletButton from "@/components/wallet/WalletButton";
 
 interface SiteHeaderProps {
-  currentPath?: "/" | "/agents" | "/chat" | "/for-agents";
+  currentPath?: "/" | "/agents" | "/chat" | "/for-agents" | "/dex";
 }
 
 export function SiteHeader({ currentPath = "/" }: SiteHeaderProps) {
@@ -37,6 +37,16 @@ export function SiteHeader({ currentPath = "/" }: SiteHeaderProps) {
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/dex"
+            className={cn(
+              "rounded-full border border-solana-green/20 bg-gradient-to-r from-solana-purple/10 to-solana-green/10 px-4 py-2 text-sm font-medium text-foreground/85",
+              "transition-colors hover:text-foreground",
+              currentPath === "/dex" && "bg-secondary text-foreground"
+            )}
+          >
+            Solark DEX
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">
