@@ -88,10 +88,11 @@ const stats = [
 const dexHighlights = [
   "Unified swaps, discovery, and execution in one surface",
   "Built to sit beside SolarkBot instead of replacing it",
-  "Open the live cinematic swap floor directly on solarkbot.xyz",
+  "Open the live cinematic swap floor directly on dex.solarkbot.xyz",
 ];
 
 const OFFICIAL_CA = "HP2fUgqcZ8WTir7Ht53r1WwDJVDv9M82K5YUefvApump";
+const SOLARK_DEX_URL = "https://dex.solarkbot.xyz";
 
 const operatorHighlights = [
   "Public guide for humans and AI operators",
@@ -297,7 +298,7 @@ export default function LandingPage() {
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
                 Open the dedicated Solark trading floor for Solana-native swaps. The DEX now
-                lives at <span className="font-mono text-foreground/90">solarkbot.xyz/dex</span>
+                lives at <span className="font-mono text-foreground/90">dex.solarkbot.xyz</span>
                 {" "}and stays connected to the rest of the product.
               </p>
 
@@ -313,18 +314,19 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Link href="/dex">
-                  <Button
-                    variant="solana"
-                    size="lg"
-                    className="group gap-2 px-8"
-                  >
+                <Button
+                  asChild
+                  variant="solana"
+                  size="lg"
+                  className="group gap-2 px-8"
+                >
+                  <a href={SOLARK_DEX_URL}>
                     Solark DEX
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
+                  </a>
+                </Button>
                 <div className="text-sm text-muted-foreground">
-                  Opens the live DEX in the same tab at <span className="font-mono text-foreground/90">/dex</span>.
+                  Opens the live DEX in the same tab at <span className="font-mono text-foreground/90">dex.solarkbot.xyz</span>.
                 </div>
               </div>
             </div>
@@ -354,7 +356,7 @@ export default function LandingPage() {
                     Route
                   </div>
                   <div className="mt-3 font-mono text-sm leading-7 text-solana-green">
-                    https://solarkbot.xyz/dex
+                    https://dex.solarkbot.xyz
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">

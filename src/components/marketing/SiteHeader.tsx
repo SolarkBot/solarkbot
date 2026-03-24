@@ -5,6 +5,8 @@ import { isLucidAgentsEnabled } from "@/lib/features";
 import { cn } from "@/lib/utils";
 import WalletButton from "@/components/wallet/WalletButton";
 
+const SOLARK_DEX_URL = "https://dex.solarkbot.xyz";
+
 interface SiteHeaderProps {
   currentPath?: "/" | "/agents" | "/chat" | "/for-agents" | "/dex";
 }
@@ -37,16 +39,15 @@ export function SiteHeader({ currentPath = "/" }: SiteHeaderProps) {
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/dex"
+          <a
+            href={SOLARK_DEX_URL}
             className={cn(
               "rounded-full border border-solana-green/20 bg-gradient-to-r from-solana-purple/10 to-solana-green/10 px-4 py-2 text-sm font-medium text-foreground/85",
-              "transition-colors hover:text-foreground",
-              currentPath === "/dex" && "bg-secondary text-foreground"
+              "transition-colors hover:text-foreground"
             )}
           >
             Solark DEX
-          </Link>
+          </a>
         </div>
 
         <div className="flex items-center gap-3">

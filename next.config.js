@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const dexOrigin = (
-  process.env.SOLARK_DEX_ORIGIN?.replace(/\/$/, "") || "https://solark-dex.vercel.app"
+  process.env.SOLARK_DEX_ORIGIN?.replace(/\/$/, "") || "https://dex.solarkbot.xyz"
 );
 
 const nextConfig = {
@@ -15,11 +15,11 @@ const nextConfig = {
     return [
       {
         source: "/dex",
-        destination: `${dexOrigin}/dex`,
+        destination: dexOrigin,
       },
       {
         source: "/dex/:path*",
-        destination: `${dexOrigin}/dex/:path*`,
+        destination: `${dexOrigin}/:path*`,
       },
     ];
   },
