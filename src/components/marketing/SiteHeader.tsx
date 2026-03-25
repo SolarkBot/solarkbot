@@ -2,10 +2,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { isLucidAgentsEnabled } from "@/lib/features";
+import { productSurfaceList } from "@/lib/product-surfaces";
 import { cn } from "@/lib/utils";
 import WalletButton from "@/components/wallet/WalletButton";
-
-const SOLARK_DEX_URL = "https://dex.solarkbot.xyz";
 
 interface SiteHeaderProps {
   currentPath?: "/" | "/agents" | "/chat" | "/for-agents" | "/dex";
@@ -39,15 +38,18 @@ export function SiteHeader({ currentPath = "/" }: SiteHeaderProps) {
               {item.label}
             </Link>
           ))}
-          <a
-            href={SOLARK_DEX_URL}
-            className={cn(
-              "rounded-full border border-solana-green/20 bg-gradient-to-r from-solana-purple/10 to-solana-green/10 px-4 py-2 text-sm font-medium text-foreground/85",
-              "transition-colors hover:text-foreground"
-            )}
-          >
-            Solark DEX
-          </a>
+          {productSurfaceList.map((surface) => (
+            <a
+              key={surface.id}
+              href={surface.url}
+              className={cn(
+                "rounded-full border border-solana-green/20 bg-gradient-to-r from-solana-purple/10 to-solana-green/10 px-4 py-2 text-sm font-medium text-foreground/85",
+                "transition-colors hover:text-foreground"
+              )}
+            >
+              {surface.label}
+            </a>
+          ))}
         </div>
 
         <div className="flex items-center gap-3">

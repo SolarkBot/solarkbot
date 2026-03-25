@@ -19,6 +19,7 @@ import { Logo } from "@/components/Logo";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import {
+  agentRelatedSurfaces,
   agentExamplePrompts,
   getAgentBaseUrl,
   agentGuardrails,
@@ -165,6 +166,46 @@ export default function ForAgentsPage() {
                     <p>{skill.description}</p>
                     <div className="rounded-2xl border border-border/50 bg-background/60 px-4 py-3 font-mono text-xs text-foreground/90">
                       &quot;{skill.prompt}&quot;
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border/40 bg-card/20 py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="mb-14 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
+              Related product surfaces
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+              These URLs are companion SolarkBot destinations. They are useful to know about, but they are not native skills inside the chat workspace.
+            </p>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            {agentRelatedSurfaces.map((surface) => {
+              const Icon = surface.id === "nft" ? Sparkles : Compass;
+
+              return (
+                <Card
+                  key={surface.id}
+                  className="overflow-hidden border-border/50 bg-card/55 backdrop-blur-sm"
+                >
+                  <div className="h-1 bg-gradient-to-r from-solana-green via-amber-200 to-solana-purple" />
+                  <CardHeader>
+                    <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-solana-green/10 text-solana-green">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-xl">{surface.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm leading-7 text-muted-foreground">
+                    <p>{surface.description}</p>
+                    <div className="rounded-2xl border border-border/50 bg-background/60 px-4 py-3 font-mono text-xs text-foreground/90">
+                      {surface.displayUrl}
                     </div>
                   </CardContent>
                 </Card>

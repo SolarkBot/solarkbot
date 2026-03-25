@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { isLucidAgentsEnabled } from "@/lib/features";
+import { productSurfaceList } from "@/lib/product-surfaces";
 
 export function SiteFooter() {
   const isLucidEnabled = isLucidAgentsEnabled();
@@ -30,6 +31,15 @@ export function SiteFooter() {
           <Link href="/chat" className="transition-colors hover:text-foreground">
             App
           </Link>
+          {productSurfaceList.map((surface) => (
+            <a
+              key={surface.id}
+              href={surface.url}
+              className="transition-colors hover:text-foreground"
+            >
+              {surface.label}
+            </a>
+          ))}
           <a
             href="https://x.com/solarkbot"
             target="_blank"

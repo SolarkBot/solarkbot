@@ -1,6 +1,6 @@
 # SolarkBot
 
-Crypto-native AI assistant for Solana with wallet sign-in, Groq/OpenAI/Anthropic model support, x402 payment flows, and agent tools for balances, transfers, swaps, and onchain lookups.
+Crypto-native AI assistant for Solana with wallet sign-in, Groq/OpenAI/Anthropic model support, x402 payment flows, agent tools for balances, transfers, swaps, and onchain lookups, plus companion NFT and DEX product surfaces.
 
 ## Features
 
@@ -8,6 +8,7 @@ Crypto-native AI assistant for Solana with wallet sign-in, Groq/OpenAI/Anthropic
 - Groq, OpenAI, or Anthropic as pluggable AI providers
 - x402-style payment endpoints for paid usage
 - Solana-aware tools for balances, transfers, swaps, history, and `.sol` resolution
+- Companion public surfaces at `nft.solarkbot.xyz` and `dex.solarkbot.xyz`
 - Prisma + PostgreSQL persistence for users, sessions, chats, tasks, and payments
 - Redis-backed nonce storage, rate limits, and free-tier counters
 
@@ -43,6 +44,7 @@ npm run dev:reset
 That command stops repo-local `next dev` processes, clears `.next`, and starts a fresh dev server. You can pass extra args through to Next, for example `npm run dev:reset -- --hostname 127.0.0.1 --port 3000`.
 
 Production site: [https://solarkbot.xyz](https://solarkbot.xyz).
+Companion surfaces: [https://nft.solarkbot.xyz](https://nft.solarkbot.xyz) and [https://dex.solarkbot.xyz](https://dex.solarkbot.xyz).
 
 ## Required Environment Variables
 

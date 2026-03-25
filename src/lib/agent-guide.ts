@@ -1,3 +1,5 @@
+import { productSurfaceList, productSurfaces } from "@/lib/product-surfaces";
+
 export const agentPlatformSkills = [
   {
     name: "Wallet Snapshot",
@@ -101,6 +103,25 @@ export const agentExamplePrompts = [
   "Give me the contract address for BONK.",
 ] as const;
 
+export const agentRelatedSurfaces = [
+  {
+    id: productSurfaces.nft.id,
+    name: productSurfaces.nft.label,
+    url: productSurfaces.nft.url,
+    displayUrl: productSurfaces.nft.displayUrl,
+    description:
+      "Companion NFT hub for SolarkBot users. This is a separate product surface, not a built-in chat skill.",
+  },
+  {
+    id: productSurfaces.dex.id,
+    name: productSurfaces.dex.label,
+    url: productSurfaces.dex.url,
+    displayUrl: productSurfaces.dex.displayUrl,
+    description:
+      "Companion DEX surface for SolarkBot users. This is a separate product surface, not a built-in chat skill.",
+  },
+] as const;
+
 export function getAgentBaseUrl() {
   const configuredBaseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -128,6 +149,14 @@ Human-readable guide: ${baseUrl}/for-agents
 - DeFi position checks
 - Transfer preparation for SOL and SPL tokens
 - Swap preparation via Jupiter
+
+## Related SolarkBot Surfaces
+${productSurfaceList
+  .map(
+    (surface) =>
+      `- ${surface.label}: ${surface.url} (${surface.description} This is a companion destination, not a built-in chat tool.)`
+  )
+  .join("\n")}
 
 ## Operating Workflow
 1. Open the chat workspace at /chat.
