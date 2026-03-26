@@ -6,61 +6,60 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        solana: {
-          purple: "#9945FF",
-          green: "#14F195",
-          dark: "#0E0E1A",
-          darker: "#08080F",
-        },
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
+        background: "rgb(var(--background) / <alpha-value>)",
+        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        line: "rgb(var(--line) / <alpha-value>)",
+        panel: "rgb(var(--panel) / <alpha-value>)",
+        panelStrong: "rgb(var(--panel-strong) / <alpha-value>)",
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          soft: "rgb(var(--accent-soft) / <alpha-value>)",
+          warm: "rgb(var(--accent-warm) / <alpha-value>)",
+          glow: "rgb(var(--accent-glow) / <alpha-value>)",
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        "4xl": "2rem",
+      },
+      boxShadow: {
+        glow: "0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(32, 255, 201, 0.10)",
+        card: "0 18px 60px rgba(7, 10, 24, 0.38)",
+      },
+      backgroundImage: {
+        "hero-grid":
+          "linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)",
       },
       fontFamily: {
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        body: ["var(--font-body)", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
+      },
+      animation: {
+        float: "float 8s ease-in-out infinite",
+        drift: "drift 18s ease-in-out infinite",
+        pulseSoft: "pulseSoft 6s ease-in-out infinite",
+      },
+      keyframes: {
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
+        drift: {
+          "0%, 100%": { transform: "translate3d(0px, 0px, 0px) scale(1)" },
+          "50%": { transform: "translate3d(10px, -14px, 0px) scale(1.03)" },
+        },
+        pulseSoft: {
+          "0%, 100%": { opacity: "0.55" },
+          "50%": { opacity: "0.95" },
+        },
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 };
 
 export default config;
